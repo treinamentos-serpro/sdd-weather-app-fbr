@@ -6,6 +6,7 @@ import SearchBar from './components/SearchBar';
 import UnitToggle from './components/UnitToggle';
 import { useWeather } from './hooks/useWeather';
 import { formatTemperature, getWeatherIcon } from './lib/format';
+import { getTemperatureBackground } from './lib/temperatureBackground';
 import type { Unit } from './types/weather';
 
 const statusMessages = {
@@ -33,10 +34,22 @@ export default function App() {
   }, [status]);
 
   const statusMessage = status === 'success' || status === 'error' ? '' : statusMessages[status];
+  const temperatureBackground = data
+    ? getTemperatureBackground(data.current.temperatureCelsius)
+    : null;
 
   return (
     <div className="min-h-screen bg-night-900 text-white">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(109,124,255,0.2),_transparent_42%),radial-gradient(circle_at_bottom_left,_rgba(245,185,66,0.1),_transparent_35%)]" />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none fixed inset-0 bg-cover bg-center bg-no-repeat transition-[background-image] duration-700"
+        style={
+          temperatureBackground
+            ? { backgroundImage: `url(${temperatureBackground.url})` }
+            : undefined
+        }
+      />
+      <div aria-hidden="true" className="pointer-events-none fixed inset-0 bg-night-900/75" />
       <div className="relative mx-auto min-h-screen max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
         <header className="flex flex-col gap-5 border-b border-white/10 pb-6 lg:flex-row lg:items-end">
           <div className="shrink-0">

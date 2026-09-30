@@ -4,7 +4,7 @@
 
 O Weather App e uma aplicacao web responsiva para consulta de informacoes meteorologicas por cidade. O usuario informa uma localidade, seleciona o resultado correto quando necessario e visualiza as condicoes atuais, a previsao horaria de 24 horas e a previsao diaria para cinco dias: hoje e os quatro dias seguintes.
 
-A interface sera apresentada em portugues do Brasil e usara Celsius como unidade inicial de temperatura, com opcao de alternancia para Fahrenheit. Os dados meteorologicos serao obtidos do Open-Meteo, usando a API gratuita e sem exigir autenticacao ou chave de API do usuario. A aplicacao nao tera contas nem persistencia local ou no servidor.
+A interface sera apresentada em portugues do Brasil e usara Celsius como unidade inicial de temperatura, com opcao de alternancia para Fahrenheit. A tela de sucesso exibira uma imagem de background contextual conforme a temperatura atual, usando imagens remotas do Unsplash com overlay para preservar contraste. Os dados meteorologicos serao obtidos do Open-Meteo, usando a API gratuita e sem exigir autenticacao ou chave de API do usuario. A aplicacao nao tera contas nem persistencia local ou no servidor.
 
 Esta especificacao transforma o discovery em um escopo inicial validavel. O contrato minimo de dados, o comportamento de armazenamento, os formatos regionais, os navegadores e as metas de qualidade do MVP estao definidos abaixo; permanecem em aberto apenas decisoes de operacao, conformidade e evolucao do produto.
 
@@ -77,6 +77,10 @@ A conversao deve usar F = (C * 9 / 5) + 32 e C = (F - 32) * 5 / 9. Os valores de
 
 O sistema deve apresentar a hora atual e as 23 horas seguintes da localidade selecionada, em ordem cronologica, com temperatura e condicao meteorologica em cada hora. O periodo deve usar o fuso da localidade e manter a unidade atualmente selecionada.
 
+### RF-06 — Background contextual por temperatura
+
+Na tela de sucesso, o sistema deve selecionar uma imagem de background conforme a temperatura atual em Celsius: faixa fria abaixo de 10°C, faixa amena de 10°C a 24°C e faixa quente a partir de 25°C. A imagem deve ser remota, carregada do Unsplash, coberta por overlay escuro e nao deve substituir o conteudo textual ou os controles.
+
 ## User Stories
 
 - **US-01 (RF-01):** Como Consultor cotidiano, quero informar o nome de uma localidade e iniciar uma busca para encontrar o lugar que desejo consultar.
@@ -87,6 +91,7 @@ O sistema deve apresentar a hora atual e as 23 horas seguintes da localidade sel
 - **US-06 (RF-04):** Como usuario acostumado a Fahrenheit, quero alternar a unidade de temperatura de Celsius para Fahrenheit para interpretar os valores na escala que conheco.
 - **US-07 (RF-04):** Como usuario acostumado a Celsius, quero alternar a unidade de temperatura de Fahrenheit para Celsius para voltar a interpretar os valores na minha escala preferida.
 - **US-08 (RF-01, RF-02 e RF-03):** Como Usuario movel ou em rede instavel, quero receber estados claros e tentar novamente quando a busca ou os dados meteorologicos nao puderem ser carregados para concluir minha consulta.
+- **US-09 (RF-06):** Como Consultor cotidiano, quero ver um ambiente visual coerente com a temperatura atual para interpretar rapidamente a condicao do dia.
 
 ## Acceptance Criteria
 
@@ -127,11 +132,18 @@ Os criterios abaixo sao verificaveis e estao vinculados aos requisitos funcionai
 
 - **Given** que uma cidade valida esteja selecionada e o provedor retorne dados horarios validos, **When** a previsao horaria for exibida, **Then** devem existir exatamente 24 entradas em ordem cronologica, cada uma com hora, temperatura e condicao em pt-BR.
 
+### AC-RF-06 — Background por temperatura
+
+- **Given** que o clima atual esteja abaixo de 10°C, **When** a tela de sucesso for exibida, **Then** o background deve usar a imagem da faixa fria e manter texto/controles legiveis sobre overlay.
+- **Given** que o clima atual esteja entre 10°C e 24°C, **When** a tela de sucesso for exibida, **Then** o background deve usar a imagem da faixa amena.
+- **Given** que o clima atual seja de 25°C ou mais, **When** a tela de sucesso for exibida, **Then** o background deve usar a imagem da faixa quente.
+- **Given** que a aplicacao esteja em idle, loading, empty ou error, **When** nenhum clima atual valido estiver disponivel, **Then** ela nao deve exibir um background baseado em temperatura anterior.
+
 ## Non-Functional Requirements
 
 ### RNF-01 — Responsividade
 
-Os fluxos de busca, consulta do clima, previsao horaria e troca de unidade devem funcionar em viewports de 320, 768 e 1280 CSS px. A matriz oficial e Chrome 120+, Firefox 121+, Safari 17+ e Edge 120+, em desktop e mobile quando aplicavel, sem rolagem horizontal e sem perda de conteudo ou controles essenciais.
+Os fluxos de busca, consulta do clima, previsao horaria, troca de unidade e background contextual devem funcionar em viewports de 320, 768 e 1280 CSS px. A imagem deve usar `cover`, nao causar overflow e manter contraste AA por meio do overlay. A matriz oficial e Chrome 120+, Firefox 121+, Safari 17+ e Edge 120+, em desktop e mobile quando aplicavel, sem rolagem horizontal e sem perda de conteudo ou controles essenciais.
 
 ### RNF-02 — Usabilidade
 
@@ -211,6 +223,7 @@ O servico deve disponibilizar health check sem dependencia do provedor meteorolo
 | US-06 | Alternar Celsius para Fahrenheit. | AC-RF-04 | RNF-01, RNF-03, RNF-04 |
 | US-07 | Alternar Fahrenheit para Celsius. | AC-RF-04 | RNF-01, RNF-03, RNF-04 |
 | US-08 | Consultar em rede instavel com estados claros e retry. | AC-RF-01, AC-RF-02, AC-RF-03 | RNF-01, RNF-03, RNF-04, RNF-05, RNF-06, RNF-10, RNF-11 |
+| US-09 | Interpretar a temperatura por background contextual. | AC-RF-06 | RNF-01, RNF-03 |
 
 Os criterios `AC-RF-*` sao a base dos testes funcionais. Os RNFs devem ser cobertos adicionalmente por testes de responsividade, acessibilidade, desempenho, carga, seguranca, privacidade e operacao conforme seus criterios especificos.
 
@@ -243,6 +256,7 @@ Os criterios `AC-RF-*` sao a base dos testes funcionais. Os RNFs devem ser cober
 - A previsao sera exibida por hora nas proximas 24 horas e por dia para hoje mais os quatro dias seguintes, com os campos definidos no contrato.
 - As datas serao calculadas no fuso horario da localidade selecionada e a interface usara os formatos pt-BR definidos no contrato do produto.
 - A conversao de temperatura usara as formulas Celsius/Fahrenheit e arredondamento para o inteiro mais proximo somente na exibicao.
+- O background sera selecionado por temperatura em `src/lib/temperatureBackground.ts`, usando tres faixas: fria, amena e quente.
 - Nao havera armazenamento local, historico, favoritos ou analytics no MVP; logs tecnicos serao anonimizados e retidos por no maximo 30 dias.
 - O acesso ao provedor sera feito por uma camada de servico sem persistencia, com validacao de resposta e timeout de 4 segundos.
 
@@ -257,6 +271,7 @@ Os criterios `AC-RF-*` sao a base dos testes funcionais. Os RNFs devem ser cober
 - Metas propostas de 90%, 5 segundos, 99,5% e WCAG 2.2 AA podem exigir escopo, infraestrutura ou validacao adicionais.
 - Suporte a dispositivos e navegadores nao definido pode ampliar o custo de testes e manutencao.
 - Chamadas diretas do navegador podem exigir decisoes sobre CORS, cache, protecao contra abuso, observabilidade e exposicao de dados de busca.
+- Dependencia de imagens remotas do Unsplash pode causar carregamento lento ou indisponibilidade; a UI deve permanecer legivel e funcional sem a imagem.
 
 ## Out of Scope
 
@@ -268,6 +283,7 @@ Os criterios `AC-RF-*` sao a base dos testes funcionais. Os RNFs devem ser cober
 - Edicao manual de dados meteorologicos ou uso de outra fonte alem do provedor aprovado.
 - Recomendacoes personalizadas de roupas, viagens ou atividades.
 - Internacionalizacao para idiomas diferentes de pt-BR.
+- Upload, hospedagem local ou curadoria de imagens proprias; o MVP usa URLs remotas do Unsplash.
 
 ## Open Questions
 

@@ -280,6 +280,32 @@ As tarefas abaixo consomem [plans/weather-app-plan.md](../plans/weather-app-plan
 - **Arquivos provaveis:** `src/app/app.css`.
 - **Tipo:** UI
 
+### T-36 — Aplicar background por temperatura
+
+- **ID:** T-36
+- **Titulo:** Exibir imagem contextual de temperatura
+- **Descricao:** Selecionar uma URL Unsplash por faixa de temperatura em funcao pura e aplicar background `cover` com overlay no App.
+- **Criterios de aceite:**
+  - Abaixo de 10°C usa faixa fria; 10°C a 24°C usa faixa amena; 25°C ou mais usa faixa quente.
+  - O background so aparece com dados meteorologicos validos.
+  - O overlay mantém texto e controles legiveis e nao cria overflow.
+- **Dependencias:** T-04, T-26, T-27.
+- **Arquivos provaveis:** `src/lib/temperatureBackground.ts`, `src/App.tsx`.
+- **Tipo:** UI
+
+### T-37 — Testar background contextual
+
+- **ID:** T-37
+- **Titulo:** Cobrir faixas de background e legibilidade
+- **Descricao:** Testar limites da funcao de faixa e o estado de sucesso com background contextual.
+- **Criterios de aceite:**
+  - Casos 9.9°C, 10°C, 24.9°C e 25°C selecionam as faixas esperadas.
+  - Estados sem clima valido nao exibem background de temperatura anterior.
+  - O teste de UI mantém conteúdo e controles acessiveis.
+- **Dependencias:** T-36.
+- **Arquivos provaveis:** `tests/unit/temperatureBackground.test.ts`, `tests/unit/App.test.tsx`.
+- **Tipo:** Test
+
 ## Entrega 5 — Testes automatizados
 
 ### T-11 — Testar service com mock de fetch
@@ -492,8 +518,9 @@ As tarefas abaixo consomem [plans/weather-app-plan.md](../plans/weather-app-plan
 | RF-03 — Consultar previsao de cinco dias | T-06, T-10, T-15, T-21, T-26 | T-13, T-16, T-24, T-28, T-29, T-30, T-32 |
 | RF-04 — Alternar unidade de temperatura | T-04, T-22, T-26 | T-25, T-29, T-32 |
 | RF-05 — Consultar previsao horaria | T-06, T-10, T-15, T-20, T-26 | T-13, T-16, T-24, T-28, T-29, T-32 |
+| RF-06 — Background contextual por temperatura | T-36 | T-37, T-29, T-31 |
 
-**Requisitos funcionais sem tarefa correspondente:** nenhum. RF-01 a RF-05 possuem tarefas de implementacao e tarefas de teste.
+**Requisitos funcionais sem tarefa correspondente:** nenhum. RF-01 a RF-06 possuem tarefas de implementacao e tarefas de teste.
 
 ## Traceability Matrix
 
@@ -534,6 +561,8 @@ As tarefas abaixo consomem [plans/weather-app-plan.md](../plans/weather-app-plan
 | T-33 | RF-01 a RF-05, RNF-01, RNF-03, RNF-04 | Fluxo principal E2E mobile |
 | T-34 | RNF-04, RNF-05, RNF-08, RNF-11 | Carga e infraestrutura |
 | T-35 | RF-01 a RF-05, RNF-01 a RNF-11 | Quality gate final |
+| T-36 | RF-06, RNF-01, RNF-03 | Background por temperatura e overlay |
+| T-37 | RF-06, RNF-01, RNF-03 | Testes de faixas e legibilidade |
 
 ## Prioridade e tamanho
 
@@ -576,6 +605,8 @@ Prioridade: **P0** e necessario para o fluxo principal ou para um criterio de ac
 | T-33 | P0 | M |
 | T-34 | P1 | G |
 | T-35 | P0 | M |
+| T-36 | P0 | M |
+| T-37 | P0 | P |
 
 Nao ha tarefas P2 no escopo atual. P2 deve ser usado somente para funcionalidades futuras que nao aparecem na spec aprovada.
 
@@ -619,7 +650,7 @@ As fatias abaixo entregam comportamento visivel progressivamente. Dentro de cada
 
 **Objetivo:** validar o MVP em diferentes telas e preparar a entrega.
 
-**Sequencia:** T-27, T-28, T-29, T-31, T-33 e T-35.
+**Sequencia:** T-27, T-28, T-29, T-31, T-33, T-35 e T-37.
 
 **Resultado demonstravel:** fluxo E2E principal, erros, viewport mobile, teclado e quality gate automatizado.
 

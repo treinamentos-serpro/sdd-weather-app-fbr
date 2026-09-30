@@ -19,6 +19,7 @@ lib (funcoes puras e contratos de dominio) apoia hooks e services sem depender d
 - **Orchestration:** hooks coordenam eventos da UI, estado local, retries e identificador da requisicao mais recente.
 - **Data access:** services encapsulam `fetch`, URLs, timeout, classificacao de erros e adaptacao do payload externo para os tipos internos.
 - **Pure domain:** lib concentra normalizacao, conversao de temperatura, mapeamento de `weather_code`, validacao de datas/series e tipos; nao acessa rede, DOM ou estado React.
+- **Visual context:** lib seleciona a imagem Unsplash por faixa de temperatura; App aplica a URL e o overlay sem duplicar a regra.
 - **Infraestrutura:** configuracao de build/deploy, timeout de 4 segundos, HTTPS e validacoes de contrato. Rate limiting e health/readiness dependem da camada de hospedagem, pois nao podem ser garantidos por uma SPA client-side.
 
 Nao havera banco, autenticacao, cache, armazenamento local, analytics, mapa, geolocalizacao ou notificacoes no MVP.
@@ -30,6 +31,7 @@ Nao havera banco, autenticacao, cache, armazenamento local, analytics, mapa, geo
 - RF-03: consulta `daily` e cards de cinco dias.
 - RF-04: estado de unidade e conversao derivada dos dados originais.
 - RF-05: consulta `hourly` e serie das proximas 24 horas.
+- RF-06: selecao de background Unsplash por faixa de temperatura atual e overlay de contraste.
 - RNF-01/RNF-02/RNF-03: componentes responsivos, usabilidade validada, semanticos e operaveis por teclado.
 - RNF-04/RNF-05/RNF-06: timeout, estados finais, retry e metricas de latencia/disponibilidade.
 - RNF-07/RNF-09/RNF-10: ausencia de persistencia, entrada segura e telemetria tecnica sem dados da busca.
@@ -78,6 +80,7 @@ src/
   lib/
     normalizeSearch.ts
     temperature.ts
+    temperatureBackground.ts
     weatherCode.ts
     validateWeatherResponse.ts
     dateSeries.ts
@@ -207,7 +210,8 @@ interface AsyncState<T> {
 9. O adaptador valida cardinalidade, datas, tipos e codigos, mapeia condicoes para pt-BR e retorna `WeatherData`.
 10. Respostas de requisicoes antigas sao descartadas pelo identificador de requisicao.
 11. A UI renderiza clima atual, 24 horas e cinco dias; valores sao exibidos na unidade selecionada.
-12. Retry repete a consulta para a mesma localidade e nao cria cache.
+12. Em `success`, `getTemperatureBackground(current.temperatureCelsius)` seleciona a URL Unsplash e a UI aplica a imagem com `cover` e overlay escuro.
+13. Retry repete a consulta para a mesma localidade e nao cria cache.
 
 ### Diagrama do fluxo
 
@@ -449,6 +453,7 @@ Com Vitest, cobrir funcoes puras e services sem depender da rede real:
 
 - `normalizeSearch`: espacos, entrada vazia, acentos e caracteres especiais.
 - `temperature`: conversoes conhecidas, arredondamento e ausencia de erro acumulado.
+- `temperatureBackground`: limites de 9.9°C, 10°C, 24.9°C e 25°C para as tres faixas visuais.
 - `weatherCode`: todos os codigos suportados e codigo desconhecido.
 - `validateWeatherResponse`: campos ausentes, tipos invalidos, cinco dias, 24 horas, datas duplicadas e timezone.
 - `openMeteoClient`: URL, parametros, timeout, HTTPS, HTTP errors e classificacao de falhas.
@@ -470,6 +475,7 @@ Com Vitest e Testing Library, testar os componentes por comportamento observavel
 - Retry repete a consulta sem nova selecao.
 - Resposta antiga nao sobrescreve resposta nova.
 - Alternancia Celsius/Fahrenheit atualiza todos os valores sem nova chamada externa.
+- Background muda conforme a temperatura atual e permanece legivel por causa do overlay.
 - Controles possuem nomes acessiveis, foco visivel e operacao por teclado.
 
 ### E2E com Playwright
@@ -502,6 +508,7 @@ Os testes E2E nao devem depender da disponibilidade real do Open-Meteo para vali
 - **Services/adapters vs. chamadas na UI:** services foram escolhidos para isolar o provedor, validar schema e facilitar mocks. Chamadas diretas em componentes seriam menores inicialmente, mas acoplariam UI ao payload externo e dificultariam testes.
 - **`lib` pura vs. utilitarios misturados nos componentes:** `lib` permite testar conversao, normalizacao e validacao sem React ou rede. Colocar essas regras nos componentes reduziria arquivos, mas aumentaria acoplamento e casos de teste de UI.
 - **Sem cache vs. cache no cliente:** sem cache segue a spec, evita dados meteorologicos obsoletos e simplifica consistencia. Cache reduziria chamadas, mas exigiria TTL, invalidacao e tratamento de dados antigos.
+- **Background remoto vs. asset local:** URLs do Unsplash reduzem o tamanho do bundle e permitem contexto visual rapido, mas dependem de rede externa; overlay e fallback sem imagem preservam legibilidade. Assets locais seriam mais previsiveis, mas aumentariam o pacote e a manutencao.
 - **Mock E2E vs. API real:** mocks tornam cenarios de loading, erro, timeout e respostas parciais deterministas. A API real e util para um smoke test manual separado, mas nao deve controlar o resultado do CI.
 - **Vitest focado por camada vs. apenas E2E:** testes unitarios sao mais rapidos para regras e contratos; E2E cobre integracao visual. Usar apenas E2E deixaria conversao, parsing e classificacao mais lentos e dificeis de diagnosticar.
 - **Gateway/proxy vs. chamadas diretas do browser:** o plano mantem services client-side para o desenvolvimento da SPA. Em producao, gateway/proxy e a alternativa recomendada para proteger limites, centralizar HTTPS/health/logs e reduzir abuso; chamadas diretas sao mais simples, mas nao garantem limite global nem observabilidade server-side.
